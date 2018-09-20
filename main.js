@@ -1,3 +1,28 @@
+function HSVtoRGB(h, s, v) {
+    var r, g, b, i, f, p, q, t;
+    if (arguments.length === 1) {
+        s = h.s, v = h.v, h = h.h;
+    }
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+        case 0: r = v, g = t, b = p; break;
+        case 1: r = q, g = v, b = p; break;
+        case 2: r = p, g = v, b = t; break;
+        case 3: r = p, g = q, b = v; break;
+        case 4: r = t, g = p, b = v; break;
+        case 5: r = v, g = p, b = q; break;
+    }
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
+}
+
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -20,7 +45,8 @@ function init() {
     dir = 0;
 
     rules = [];
-    for (let index = 0; index < document.getElementById('rules').value.length; index++) {
+    n_rules = document.getElementById('rules').value.length;
+    for (let index = 0; index < n_rules; index++) {
         const rule = document.getElementById('rules').value[index];
         switch (rule) {
             case "F":
@@ -36,12 +62,22 @@ function init() {
                 rd = 3;
                 break;
         }
+        if (index == 0) {
+            rc = [255, 255, 255];
+        }
+        else if (index == n_rules - 1) {
+            rc = [0, 0, 0];
+        }
+        else {
+            ratio = (index - 1) / (n_rules - 2);
+            rgb = HSVtoRGB(ratio, 1, 0.875);
+            rc = [rgb.r, rgb.g, rgb.b];
+        }
         newrule = {
-            color: [Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)],
+            color: rc,
             dir: rd,
         }
         rules.push(newrule);
-        console.log(rules);
     }
 
     for (let index = 0; index < canvas.width * canvas.height * 4; index += 4) {
