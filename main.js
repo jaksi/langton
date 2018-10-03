@@ -27,6 +27,7 @@ var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 var data = imageData.data;
+var midiOutput = null;
 
 rules = [
     { color: [255, 255, 255], dir: 1 },
@@ -90,7 +91,13 @@ function init() {
 
     if (oldInterval != 0)
         clearInterval(oldInterval)
-    oldInterval = setInterval(update, Math.floor(60 / 1000.0));
+    oldInterval = setInterval(update, 100);
+
+    navigator.requestMIDIAccess().then(function(midiAccess) {
+        midiAccess.outputs.forEach(function(output) {
+            midiOutput = output;
+        });
+    });
 }
 
 function draw() {
@@ -116,6 +123,9 @@ function tick() {
             data[index + 0] = nr.color[0];
             data[index + 1] = nr.color[1];
             data[index + 2] = nr.color[2];
+            if (midiOutput) {
+                midiOutput.send([0x80, 60 + ni, 100]);
+            }
             break;
         }
     }
