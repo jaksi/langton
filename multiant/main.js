@@ -131,9 +131,9 @@ function update() {
         currentR = pixelData[(ant.y * width + ant.x) * 4 + 0];
         currentG = pixelData[(ant.y * width + ant.x) * 4 + 1];
         currentB = pixelData[(ant.y * width + ant.x) * 4 + 2];
-        pixelData[(ant.y * width + ant.x) * 4 + 0] = 0.99 * currentR + 0.01 * gradient(255, ant.color.r, gradientRatio);
-        pixelData[(ant.y * width + ant.x) * 4 + 1] = 0.99 * currentG + 0.01 * gradient(255, ant.color.g, gradientRatio);
-        pixelData[(ant.y * width + ant.x) * 4 + 2] = 0.99 * currentB + 0.01 * gradient(255, ant.color.b, gradientRatio);
+        pixelData[(ant.y * width + ant.x) * 4 + 0] = 0.98 * currentR + 0.02 * gradient(255, ant.color.r, gradientRatio);
+        pixelData[(ant.y * width + ant.x) * 4 + 1] = 0.98 * currentG + 0.02 * gradient(255, ant.color.g, gradientRatio);
+        pixelData[(ant.y * width + ant.x) * 4 + 2] = 0.98 * currentB + 0.02 * gradient(255, ant.color.b, gradientRatio);
 
         let orientation = orientations[ant.orientation];
         ant.x = (ant.x + orientation.x) % width;
