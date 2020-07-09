@@ -95,7 +95,7 @@ function init(event) {
 
   field = new Array(width * height).fill(0);
 
-  steps = 50000;
+  steps = 256;
 
   window.requestAnimationFrame(update);
 }
