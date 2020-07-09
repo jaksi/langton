@@ -8,43 +8,7 @@
   </head>
 
   <body>
-    <div id="settings">
-      <div>
-        <p id="fps">0 FPS</p>
-      </div>
-      <div>
-        <input
-          id="steps_per_frame"
-          type="number"
-          min="1"
-          step="1"
-          value="100"
-          onchange="steps = document.getElementById('steps_per_frame').value;"
-        />
-        steps per frame
-      </div>
-      <div><input id="slow" type="checkbox" /> Slow</div>
-      <div>
-        Square size:
-        <input
-          id="square_size"
-          type="number"
-          min="1"
-          step="1"
-          value="1"
-          onchange="reset = true;"
-        />
-      </div>
-      <div>
-        <input type="button" value="Reset" onclick="reset = true;" />
-      </div>
-      <div>
-        <a href="config.html">Config</a>
-      </div>
-    </div>
-    <div id="canvas_div">
-      <canvas id="canvas"></canvas>
-    </div>
+    <canvas id="canvas"></canvas>
     <script src="index.js"></script>
   </body>
 </html>

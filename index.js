@@ -52,8 +52,6 @@ height = 0;
 
 field = null;
 
-previous_timestamp = 0;
-
 canvas = document.getElementById("canvas");
 ctx = null;
 image_data = null;
@@ -70,9 +68,9 @@ reset = true;
 
 function init(event) {
   reset = false;
-  square_size = document.getElementById("square_size").value;
-  width = Math.floor(window.innerWidth / square_size) - 1;
-  height = Math.floor((window.innerHeight - 25) / square_size) - 1;
+  square_size = 1;
+  width = Math.floor(window.innerWidth / square_size);
+  height = Math.floor(window.innerHeight / square_size);
   canvas.width = width;
   canvas.height = height;
 
@@ -97,15 +95,12 @@ function init(event) {
 
   field = new Array(width * height).fill(0);
 
-  steps = document.getElementById("steps_per_frame").value;
+  steps = 50000;
 
   window.requestAnimationFrame(update);
 }
 
 function update(timestamp) {
-  fps = Math.round(1000 / (timestamp - previous_timestamp));
-  document.getElementById("fps").innerText = `${fps} FPS`;
-  previous_timestamp = timestamp;
   for (step = 0; step < steps; step++) {
     ants.forEach((ant) => {
       state = field[width * ant.y + ant.x];
@@ -155,12 +150,6 @@ function update(timestamp) {
   if (reset) {
     init();
   } else {
-    if (document.getElementById("slow").checked) {
-      setTimeout(() => {
-        window.requestAnimationFrame(update);
-      }, 1000);
-    } else {
-      window.requestAnimationFrame(update);
-    }
+    window.requestAnimationFrame(update);
   }
 }

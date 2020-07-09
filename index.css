@@ -3,27 +3,8 @@ html {
 }
 
 body {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   margin: 0;
-}
-
-#settings {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  height: 50px;
-}
-
-#fps {
-  margin: 0;
-  width: 100px;
-}
-
-#canvas_div {
-  flex-basis: 1;
-  flex: 1;
 }
 
 #canvas {
@@ -31,4 +12,5 @@ body {
   height: 100%;
   image-rendering: optimizeSpeed;
   image-rendering: pixelated;
+  display: block;
 }
