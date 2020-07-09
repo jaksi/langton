@@ -3,49 +3,61 @@ orientations = {
   down: 1,
   left: 2,
   up: 3,
-  length: 4,
 };
 
 directions = {
-  forward: 0,
-  right: 1,
-  reverse: 2,
-  left: 3,
-  length: 4,
+  N: 0,
+  R: 1,
+  U: 2,
+  L: 3,
 };
 
-function generate_color() {
+function generate_color(params = {}) {
+  color = {
+    r: params.r !== undefined ? params.r : Math.floor(Math.random() * 256),
+    g: params.g !== undefined ? params.g : Math.floor(Math.random() * 256),
+    b: params.b !== undefined ? params.b : Math.floor(Math.random() * 256),
+  };
+  if (params.alpha === undefined || params.alpha || params.a !== undefined) {
+    color.a =
+      params.a !== undefined ? params.a : Math.floor(Math.random() * 256);
+  }
+  return color;
+}
+
+function generate_rule(params = {}) {
   return {
-    r: Math.floor(Math.random() * 256),
-    g: Math.floor(Math.random() * 256),
-    b: Math.floor(Math.random() * 256),
-    a: Math.floor(Math.random() * 256),
+    direction:
+      params.direction !== undefined
+        ? params.direction
+        : Object.keys(directions)[
+            Math.floor(Math.random() * Object.keys(directions).length)
+          ],
+    color: generate_color(params.color !== undefined ? params.color : {}),
   };
 }
 
-function generate_rule() {
+function generate_ant(params = {}) {
   return {
-    direction: Math.floor(Math.random() * directions.length),
-    color: generate_color(),
+    start_x: params.start_x !== undefined ? params.start_x : Math.random(),
+    start_y: params.start_y !== undefined ? params.start_y : Math.random(),
+    start_orientation:
+      params.start_orientation !== undefined
+        ? params.start_orientation
+        : Object.keys(orientations)[
+            Math.floor(Math.random() * Object.keys(orientations).length)
+          ],
+    rules: params.rules
+      ? params.rules
+          .split("")
+          .map((rule) =>
+            generate_rule({ direction: rule, color: { alpha: false } })
+          )
+      : Array(2 + Math.floor(Math.random() * 8))
+          .fill()
+          .map(() => generate_rule()),
   };
 }
-
-function generate_ant() {
-  return {
-    start_x: Math.random(),
-    start_y: Math.random(),
-    orientation: Math.floor(Math.random() * orientations.length),
-    rules: Array(2 + Math.floor(Math.random() * 8))
-      .fill()
-      .map(() => generate_rule()),
-  };
-}
-
-background = generate_color();
-
-ants = Array(1 + Math.floor(Math.random() * 8))
-  .fill()
-  .map(() => generate_ant());
 
 width = 0;
 height = 0;
@@ -63,6 +75,7 @@ window.onload = init;
 window.onresize = (event) => {
   reset = true;
 };
+window.onhashchange = init;
 
 reset = true;
 
@@ -74,24 +87,57 @@ function init(event) {
   canvas.width = width;
   canvas.height = height;
 
+  hash = window.location.hash ? window.location.hash.substring(1) : null;
+
+  config = {
+    background: generate_color({ alpha: false }),
+    ants: hash
+      ? hash.split(",").map((ant, i) =>
+          generate_ant({
+            rules: ant,
+            start_orientation: "left",
+            start_x:
+              i / hash.split(",").length + 1 / (2 * hash.split(",").length),
+            start_y: 0.5,
+          })
+        )
+      : Array(1 + Math.floor(Math.random() * 8))
+          .fill()
+          .map(() => generate_ant()),
+  };
+
+  ants = config.ants.map(function (ant) {
+    return {
+      x: Math.round(ant.start_x * width),
+      y: Math.round(ant.start_y * height),
+      orientation: orientations[ant.start_orientation],
+      rules: ant.rules.map(function (rule) {
+        return {
+          color: {
+            r: rule.color.r,
+            g: rule.color.g,
+            b: rule.color.b,
+            a: rule.color.a !== undefined ? rule.color.a : 255,
+          },
+          direction: directions[rule.direction],
+        };
+      }),
+    };
+  });
+
   ctx = canvas.getContext("2d", { alpha: false });
   image_data = ctx.getImageData(0, 0, width, height);
   data = image_data.data;
   for (cy = 0; cy < height; cy++) {
     for (cx = 0; cx < width; cx++) {
       index = 4 * (width * cy + cx);
-      data[index + 0] = background.r;
-      data[index + 1] = background.g;
-      data[index + 2] = background.b;
+      data[index + 0] = config.background.r;
+      data[index + 1] = config.background.g;
+      data[index + 2] = config.background.b;
       data[index + 3] = 255;
     }
   }
   ctx.putImageData(image_data, 0, 0);
-
-  ants.forEach((ant) => {
-    ant.x = Math.round(ant.start_x * width);
-    ant.y = Math.round(ant.start_y * height);
-  });
 
   field = new Array(width * height).fill(0);
 
@@ -106,7 +152,7 @@ function update(timestamp) {
       state = field[width * ant.y + ant.x];
       rule = ant.rules[state % ant.rules.length];
       ant.orientation += rule.direction;
-      ant.orientation %= orientations.length;
+      ant.orientation %= Object.keys(orientations).length;
       state++;
       state %= ant.rules.length;
       field[width * ant.y + ant.x] = state;
