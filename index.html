@@ -8,7 +8,47 @@
   </head>
 
   <body>
-    <canvas id="canvas"></canvas>
+    <div id="controls">
+      <div>Speed</div>
+      <div>
+        <input
+          type="number"
+          min="1"
+          value="256"
+          max="65536"
+          step="1"
+          id="speed"
+        />
+      </div>
+      <div>Scale</div>
+      <div>
+        <input
+          type="number"
+          min="1"
+          value="1"
+          max="256"
+          step="1"
+          id="scale"
+          onchange="reset = true;"
+        />
+      </div>
+      <div>Controls</div>
+      <div>
+        <input type="button" value="Reset" onclick="reset = true;" />
+        <input
+          type="button"
+          value="Randomize"
+          onclick="textarea.value =  ''; reset = true;"
+        />
+      </div>
+      <div>Config</div>
+      <div id="textarea_div">
+        <textarea id="textarea" onchange="reset = true;"></textarea>
+      </div>
+    </div>
+    <div id="canvas_div">
+      <canvas id="canvas"></canvas>
+    </div>
     <script src="index.js"></script>
   </body>
 </html>

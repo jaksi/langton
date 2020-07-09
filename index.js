@@ -12,50 +12,46 @@ directions = {
   L: 3,
 };
 
-function generate_color(params = {}) {
+function generate_color(alpha = true) {
   color = {
-    r: params.r !== undefined ? params.r : Math.floor(Math.random() * 256),
-    g: params.g !== undefined ? params.g : Math.floor(Math.random() * 256),
-    b: params.b !== undefined ? params.b : Math.floor(Math.random() * 256),
+    r: Math.floor(Math.random() * 256),
+    g: Math.floor(Math.random() * 256),
+    b: Math.floor(Math.random() * 256),
   };
-  if (params.alpha === undefined || params.alpha || params.a !== undefined) {
-    color.a =
-      params.a !== undefined ? params.a : Math.floor(Math.random() * 256);
+  if (alpha) {
+    color.a = Math.floor(Math.random() * 256);
   }
   return color;
 }
 
-function generate_rule(params = {}) {
+function generate_rule() {
   return {
-    direction:
-      params.direction !== undefined
-        ? params.direction
-        : Object.keys(directions)[
-            Math.floor(Math.random() * Object.keys(directions).length)
-          ],
-    color: generate_color(params.color !== undefined ? params.color : {}),
+    direction: Object.keys(directions)[
+      Math.floor(Math.random() * Object.keys(directions).length)
+    ],
+    color: generate_color(),
   };
 }
 
-function generate_ant(params = {}) {
+function generate_ant() {
   return {
-    start_x: params.start_x !== undefined ? params.start_x : Math.random(),
-    start_y: params.start_y !== undefined ? params.start_y : Math.random(),
-    start_orientation:
-      params.start_orientation !== undefined
-        ? params.start_orientation
-        : Object.keys(orientations)[
-            Math.floor(Math.random() * Object.keys(orientations).length)
-          ],
-    rules: params.rules
-      ? params.rules
-          .split("")
-          .map((rule) =>
-            generate_rule({ direction: rule, color: { alpha: false } })
-          )
-      : Array(2 + Math.floor(Math.random() * 8))
-          .fill()
-          .map(() => generate_rule()),
+    start_x: Math.round(100 * Math.random()) / 100,
+    start_y: Math.round(100 * Math.random()) / 100,
+    start_orientation: Object.keys(orientations)[
+      Math.floor(Math.random() * Object.keys(orientations).length)
+    ],
+    rules: Array(2 + Math.floor(Math.random() * 3))
+      .fill()
+      .map(() => generate_rule()),
+  };
+}
+
+function generate_config() {
+  return {
+    background: generate_color(false),
+    ants: Array(1 + Math.floor(Math.random() * 2))
+      .fill()
+      .map(() => generate_ant()),
   };
 }
 
@@ -64,12 +60,11 @@ height = 0;
 
 field = null;
 
+textarea = document.getElementById("textarea");
 canvas = document.getElementById("canvas");
 ctx = null;
 image_data = null;
 data = null;
-
-steps = 0;
 
 window.onload = init;
 window.onresize = (event) => {
@@ -81,30 +76,18 @@ reset = true;
 
 function init(event) {
   reset = false;
-  square_size = 1;
-  width = Math.floor(window.innerWidth / square_size);
-  height = Math.floor(window.innerHeight / square_size);
+  scale = document.getElementById("scale").value;
+  width = Math.floor(canvas.clientWidth / scale);
+  height = Math.floor(canvas.clientHeight / scale);
   canvas.width = width;
   canvas.height = height;
 
-  hash = window.location.hash ? window.location.hash.substring(1) : null;
-
-  config = {
-    background: generate_color({ alpha: false }),
-    ants: hash
-      ? hash.split(",").map((ant, i) =>
-          generate_ant({
-            rules: ant,
-            start_orientation: "left",
-            start_x:
-              i / hash.split(",").length + 1 / (2 * hash.split(",").length),
-            start_y: 0.5,
-          })
-        )
-      : Array(1 + Math.floor(Math.random() * 8))
-          .fill()
-          .map(() => generate_ant()),
-  };
+  if (textarea.value) {
+    config = JSON.parse(textarea.value);
+  } else {
+    config = generate_config();
+  }
+  textarea.innerHTML = JSON.stringify(config, null, 1);
 
   ants = config.ants.map(function (ant) {
     return {
@@ -141,12 +124,11 @@ function init(event) {
 
   field = new Array(width * height).fill(0);
 
-  steps = 256;
-
   window.requestAnimationFrame(update);
 }
 
 function update(timestamp) {
+  steps = document.getElementById("speed").value;
   for (step = 0; step < steps; step++) {
     ants.forEach((ant) => {
       state = field[width * ant.y + ant.x];
