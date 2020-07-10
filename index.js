@@ -40,31 +40,25 @@ function generate_ant() {
     start_orientation: Object.keys(orientations)[
       Math.floor(Math.random() * Object.keys(orientations).length)
     ],
-    rules: Array(2 + Math.floor(Math.random() * 3))
-      .fill()
-      .map(() => generate_rule()),
+    rules: [...Array(2 + Math.floor(Math.random() * 15))].map(() =>
+      generate_rule()
+    ),
   };
 }
 
 function generate_config() {
   return {
     background: generate_color(false),
-    ants: Array(1 + Math.floor(Math.random() * 2))
-      .fill()
-      .map(() => generate_ant()),
+    ants: [...Array(1 + Math.floor(Math.random() * 4))].map(() =>
+      generate_ant()
+    ),
   };
 }
 
-width = 0;
-height = 0;
-
-field = null;
-
-textarea = document.getElementById("textarea");
-canvas = document.getElementById("canvas");
-ctx = null;
-image_data = null;
-data = null;
+var field;
+var canvas_context;
+var image_data;
+reset = true;
 
 window.onload = init;
 window.onresize = (event) => {
@@ -72,22 +66,29 @@ window.onresize = (event) => {
 };
 window.onhashchange = init;
 
-reset = true;
-
 function init(event) {
   reset = false;
+
+  canvas = document.getElementById("canvas");
+
   scale = document.getElementById("scale").value;
+
   width = Math.floor(canvas.clientWidth / scale);
   height = Math.floor(canvas.clientHeight / scale);
+
   canvas.width = width;
   canvas.height = height;
 
-  if (textarea.value) {
-    config = JSON.parse(textarea.value);
+  canvas_context = canvas.getContext("2d", { alpha: false });
+  image_data = canvas_context.getImageData(0, 0, width, height);
+
+  hash = window.location.hash ? window.location.hash.substring(1) : null;
+  if (hash) {
+    config = JSON.parse(atob(hash));
   } else {
     config = generate_config();
   }
-  textarea.innerHTML = JSON.stringify(config, null, 1);
+  window.location.hash = btoa(JSON.stringify(config));
 
   ants = config.ants.map(function (ant) {
     return {
@@ -108,8 +109,6 @@ function init(event) {
     };
   });
 
-  ctx = canvas.getContext("2d", { alpha: false });
-  image_data = ctx.getImageData(0, 0, width, height);
   data = image_data.data;
   for (cy = 0; cy < height; cy++) {
     for (cx = 0; cx < width; cx++) {
@@ -120,61 +119,81 @@ function init(event) {
       data[index + 3] = 255;
     }
   }
-  ctx.putImageData(image_data, 0, 0);
+  canvas_context.putImageData(image_data, 0, 0);
 
   field = new Array(width * height).fill(0);
 
   window.requestAnimationFrame(update);
 }
 
+function move_forward(ant) {
+  switch (ant.orientation) {
+    case orientations.right:
+      ant.x++;
+      if (ant.x >= width) {
+        ant.x = 0;
+      }
+      break;
+    case orientations.down:
+      ant.y++;
+      if (ant.y >= height) {
+        ant.y = 0;
+      }
+      break;
+    case orientations.left:
+      ant.x--;
+      if (ant.x < 0) {
+        ant.x = width - 1;
+      }
+      break;
+    case orientations.up:
+      ant.y--;
+      if (ant.y < 0) {
+        ant.y = height - 1;
+      }
+      break;
+  }
+}
+
+function update_ant(ant) {
+  state = field[width * ant.y + ant.x];
+
+  rule = ant.rules[state % ant.rules.length];
+
+  ant.orientation += rule.direction;
+  ant.orientation %= Object.keys(orientations).length;
+
+  state++;
+  state %= ant.rules.length;
+  field[width * ant.y + ant.x] = state;
+
+  move_forward(ant);
+
+  index = 4 * (width * ant.y + ant.x);
+  blend_ratio = rule.color.a / 255;
+  data[index + 0] =
+    (1 - blend_ratio) * data[index + 0] + blend_ratio * rule.color.r;
+  data[index + 1] =
+    (1 - blend_ratio) * data[index + 1] + blend_ratio * rule.color.g;
+  data[index + 2] =
+    (1 - blend_ratio) * data[index + 2] + blend_ratio * rule.color.b;
+}
+
 function update(timestamp) {
+  canvas = document.getElementById("canvas");
+
+  width = canvas.width;
+  height = canvas.height;
+
+  data = image_data.data;
+
   steps = document.getElementById("speed").value;
   for (step = 0; step < steps; step++) {
-    ants.forEach((ant) => {
-      state = field[width * ant.y + ant.x];
-      rule = ant.rules[state % ant.rules.length];
-      ant.orientation += rule.direction;
-      ant.orientation %= Object.keys(orientations).length;
-      state++;
-      state %= ant.rules.length;
-      field[width * ant.y + ant.x] = state;
-      switch (ant.orientation) {
-        case orientations.right:
-          ant.x++;
-          if (ant.x >= width) {
-            ant.x = 0;
-          }
-          break;
-        case orientations.down:
-          ant.y++;
-          if (ant.y >= height) {
-            ant.y = 0;
-          }
-          break;
-        case orientations.left:
-          ant.x--;
-          if (ant.x < 0) {
-            ant.x = width - 1;
-          }
-          break;
-        case orientations.up:
-          ant.y--;
-          if (ant.y < 0) {
-            ant.y = height - 1;
-          }
-          break;
-      }
-      index = 4 * (width * ant.y + ant.x);
-      blend_ratio = rule.color.a / 255;
-      data[index + 0] =
-        (1 - blend_ratio) * data[index + 0] + blend_ratio * rule.color.r;
-      data[index + 1] =
-        (1 - blend_ratio) * data[index + 1] + blend_ratio * rule.color.g;
-      data[index + 2] =
-        (1 - blend_ratio) * data[index + 2] + blend_ratio * rule.color.b;
-    });
+    ants.forEach(update_ant);
   }
-  ctx.putImageData(image_data, 0, 0);
+
+  canvas_context.putImageData(image_data, 0, 0);
+
   if (reset) {
     init();
   } else {
