@@ -58,20 +58,26 @@ function generate_config() {
 var field;
 var canvas_context;
 var image_data;
-reset = true;
+var request_id;
+config = null;
+running = false;
+previous_timestamp = 0;
+frames = 0;
 
 window.onload = init;
-window.onresize = (event) => {
-  reset = true;
-};
+window.onresize = init;
 window.onhashchange = init;
 
 function init(event) {
-  reset = false;
+  running = false;
+
+  if (request_id) {
+    cancelAnimationFrame(request_id);
+  }
 
   canvas = document.getElementById("canvas");
 
-  scale = document.getElementById("scale").value;
+  scale = parseInt(document.getElementById("scale").value);
 
   width = Math.floor(canvas.clientWidth / scale);
   height = Math.floor(canvas.clientHeight / scale);
@@ -82,13 +88,28 @@ function init(event) {
   canvas_context = canvas.getContext("2d", { alpha: false });
   image_data = canvas_context.getImageData(0, 0, width, height);
 
-  hash = window.location.hash ? window.location.hash.substring(1) : null;
-  if (hash) {
-    config = JSON.parse(atob(hash));
-  } else {
-    config = generate_config();
+  if (config === null) {
+    hash = window.location.hash ? window.location.hash.substring(1) : null;
+    if (hash) {
+      config = JSON.parse(atob(hash));
+    } else {
+      config = generate_config();
+    }
   }
-  window.location.hash = btoa(JSON.stringify(config));
+  if (config.background === undefined) {
+    config.background = generate_color(false);
+  }
+  if (config.ants === undefined) {
+    config.ants = [];
+  }
+  document.getElementById("share").href = `#${btoa(JSON.stringify(config))}`;
+  document.getElementById(
+    "background"
+  ).value = `#${config.background.r
+    .toString(16)
+    .padStart(2, "0")}${config.background.g
+    .toString(16)
+    .padStart(2, "0")}${config.background.b.toString(16).padStart(2, "0")}`;
 
   ants = config.ants.map(function (ant) {
     return {
@@ -123,7 +144,20 @@ function init(event) {
 
   field = new Array(width * height).fill(0);
 
-  window.requestAnimationFrame(update);
+  running = true;
+
+  request_id = window.requestAnimationFrame(update);
+}
+
+function config_change() {
+  hex = config.background = document
+    .getElementById("background")
+    .value.substring(1);
+  r = parseInt(hex.substring(0, 2), 16);
+  g = parseInt(hex.substring(2, 4), 16);
+  b = parseInt(hex.substring(4, 6), 16);
+  config.background = { r: r, g: g, b: b };
+  init();
 }
 
 function move_forward(ant) {
@@ -180,6 +214,13 @@ function update_ant(ant) {
 }
 
 function update(timestamp) {
+  if (timestamp - previous_timestamp > 1000) {
+    fps = Math.round((1000 * frames) / (timestamp - previous_timestamp));
+    document.getElementById("fps").textContent = `${fps} FPS`;
+    previous_timestamp = timestamp;
+    frames = 0;
+  }
+
   canvas = document.getElementById("canvas");
 
   width = canvas.width;
@@ -187,16 +228,16 @@ function update(timestamp) {
 
   data = image_data.data;
 
-  steps = document.getElementById("speed").value;
+  steps = parseInt(document.getElementById("speed").value);
   for (step = 0; step < steps; step++) {
     ants.forEach(update_ant);
   }
 
   canvas_context.putImageData(image_data, 0, 0);
 
-  if (reset) {
-    init();
-  } else {
-    window.requestAnimationFrame(update);
+  frames++;
+
+  if (running) {
+    request_id = window.requestAnimationFrame(update);
   }
 }

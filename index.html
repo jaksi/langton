@@ -5,10 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Langton's ant</title>
     <link rel="stylesheet" href="index.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
     <div id="controls">
+      <div>Info</div>
+      <div>
+        <p><a href="https://github.com/jaksi/langton">what even is this</a></p>
+        <p><a href="" id="share">Sharable link</a></p>
+        <p id="fps">FPS</p>
+      </div>
       <div>Speed</div>
       <div>
         <input
@@ -29,17 +39,21 @@
           max="256"
           step="1"
           id="scale"
-          onchange="reset = true;"
+          onchange="init();"
         />
       </div>
       <div>Controls</div>
       <div>
-        <input type="button" value="Reset" onclick="reset = true;" />
+        <input type="button" value="Reset" onclick="init();" />
         <input
           type="button"
           value="Randomize"
-          onclick="window.location.hash =  ''; reset = true;"
+          onclick="config = null; init();"
         />
+      </div>
+      <div>Background</div>
+      <div>
+        <input type="color" id="background" onchange="config_change();" />
       </div>
     </div>
     <div id="canvas_div">
