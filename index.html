@@ -12,55 +12,58 @@
   </head>
 
   <body>
-    <div id="controls">
-      <div>Info</div>
-      <div>
-        <p><a href="https://github.com/jaksi/langton">what even is this</a></p>
-        <p><a href="" id="share">Sharable link</a></p>
-        <p id="fps">FPS</p>
+    <div id="container">
+      <div id="sidebar">
+        <div>
+          <a href="https://github.com/jaksi/langton">What even is this</a><br />
+          <a href="" id="share">Sharable link</a><br />
+          <p id="fps">FPS</p>
+        </div>
+
+        <div class="grid">
+          Speed
+          <input
+            type="number"
+            min="1"
+            value="500"
+            max="65536"
+            step="1"
+            id="speed"
+          />
+          Scale
+          <input
+            type="number"
+            min="1"
+            value="1"
+            max="256"
+            step="1"
+            id="scale"
+            onchange="init();"
+          />
+        </div>
+
+        <div>
+          <input type="button" value="Reset" onclick="init();" />
+          <input
+            type="button"
+            value="Randomize"
+            onclick="config = null; window.location.hash = ''; init();"
+          />
+        </div>
+
+        <div class="grid">
+          Background
+          <input type="color" id="background" onchange="config_change();" />
+        </div>
+        <div>
+          Ants
+          <div id="ants"></div>
+        </div>
       </div>
-      <div>Speed</div>
-      <div>
-        <input
-          type="number"
-          min="1"
-          value="500"
-          max="65536"
-          step="1"
-          id="speed"
-        />
+      <div id="canvas_div">
+        <canvas id="canvas"></canvas>
       </div>
-      <div>Scale</div>
-      <div>
-        <input
-          type="number"
-          min="1"
-          value="1"
-          max="256"
-          step="1"
-          id="scale"
-          onchange="init();"
-        />
-      </div>
-      <div>Controls</div>
-      <div>
-        <input type="button" value="Reset" onclick="init();" />
-        <input
-          type="button"
-          value="Randomize"
-          onclick="config = null; window.location.hash = ''; init();"
-        />
-      </div>
-      <div>Background</div>
-      <div>
-        <input type="color" id="background" onchange="config_change();" />
-      </div>
-      <div>Ants</div>
-      <div id="ants"></div>
+      <script src="index.js"></script>
     </div>
-    <div id="canvas_div">
-      <canvas id="canvas"></canvas>
-    </div>
-    <script src="index.js"></script>
   </body>
 </html>

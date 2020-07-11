@@ -1,11 +1,11 @@
-orientations = {
+const orientations = {
   right: 0,
   down: 1,
   left: 2,
   up: 3,
 };
 
-directions = {
+const directions = {
   N: 0,
   R: 1,
   U: 2,
@@ -13,7 +13,7 @@ directions = {
 };
 
 function generate_color(alpha = true) {
-  color = {
+  const color = {
     r: Math.floor(Math.random() * 256),
     g: Math.floor(Math.random() * 256),
     b: Math.floor(Math.random() * 256),
@@ -58,26 +58,29 @@ function generate_config() {
 var field;
 var canvas_context;
 var image_data;
+var data;
 var request_id;
-config = null;
-running = false;
-previous_timestamp = 0;
-frames = 0;
+var config = null;
+var running = false;
+var previous_timestamp = 0;
+var frames_count = 0;
+var ants;
+var width, height;
 
 window.onload = init;
 window.onresize = init;
 window.onhashchange = init;
 
-function init(event) {
+function reset() {
   running = false;
 
   if (request_id) {
     cancelAnimationFrame(request_id);
   }
 
-  canvas = document.getElementById("canvas");
+  const canvas = document.getElementById("canvas");
 
-  scale = parseInt(document.getElementById("scale").value);
+  const scale = parseInt(document.getElementById("scale").value);
 
   width = Math.floor(canvas.clientWidth / scale);
   height = Math.floor(canvas.clientHeight / scale);
@@ -87,9 +90,14 @@ function init(event) {
 
   canvas_context = canvas.getContext("2d", { alpha: false });
   image_data = canvas_context.getImageData(0, 0, width, height);
+  data = image_data.data;
+}
 
+function load_config() {
   if (config === null) {
-    hash = window.location.hash ? window.location.hash.substring(1) : null;
+    const hash = window.location.hash
+      ? window.location.hash.substring(1)
+      : null;
     if (hash) {
       config = JSON.parse(atob(hash));
     } else {
@@ -102,25 +110,6 @@ function init(event) {
   if (config.ants === undefined) {
     config.ants = [];
   }
-  document.getElementById("share").href = `#${btoa(JSON.stringify(config))}`;
-
-  document.getElementById(
-    "background"
-  ).value = `#${config.background.r
-    .toString(16)
-    .padStart(2, "0")}${config.background.g
-    .toString(16)
-    .padStart(2, "0")}${config.background.b.toString(16).padStart(2, "0")}`;
-  ants_div = document.getElementById("ants");
-  ants_div.innerHTML = "";
-  config.ants.forEach((ant) => {
-    ant_div = document.createElement("div");
-    ant_div.className = "ant";
-    ant_div.innerHTML = JSON.stringify(ant, null, 1);
-    ants_div.appendChild(ant_div);
-  });
-  ants_div.appendChild();
-  ants_div.innerHTML = JSON.stringify(config.ants, null, 1);
 
   ants = config.ants.map(function (ant) {
     return {
@@ -141,10 +130,60 @@ function init(event) {
     };
   });
 
-  data = image_data.data;
-  for (cy = 0; cy < height; cy++) {
-    for (cx = 0; cx < width; cx++) {
-      index = 4 * (width * cy + cx);
+  field = new Array(width * height).fill(0);
+}
+
+function setup_ui() {
+  document.getElementById("share").href = `#${btoa(JSON.stringify(config))}`;
+
+  document.getElementById(
+    "background"
+  ).value = `#${config.background.r
+    .toString(16)
+    .padStart(2, "0")}${config.background.g
+    .toString(16)
+    .padStart(2, "0")}${config.background.b.toString(16).padStart(2, "0")}`;
+
+  const ants_div = document.getElementById("ants");
+  ants_div.innerHTML = "";
+
+  config.ants.forEach((ant) => {
+    const ant_div = document.createElement("div");
+    ant_div.className = "ant";
+
+    const x_text = document.createElement("p");
+    x_text.textContent = "X: ";
+    ant_div.appendChild(x_text);
+
+    const x_input = document.createElement("input");
+    x_input.type = "number";
+    x_input.min = 0;
+    x_input.max = 1;
+    x_input.step = 0.01;
+    x_input.value = ant.start_x;
+    ant_div.appendChild(x_input);
+    ant_div.appendChild(document.createElement("br"));
+
+    const y_text = document.createElement("p");
+    y_text.textContent = "Y: ";
+    ant_div.appendChild(y_text);
+
+    const y_input = document.createElement("input");
+    y_input.type = "number";
+    y_input.min = 0;
+    y_input.max = 1;
+    y_input.step = 0.01;
+    y_input.value = ant.start_y;
+    ant_div.appendChild(y_input);
+    ants_div.appendChild(ant_div);
+  });
+}
+
+function setup_canvas() {
+  const data = image_data.data;
+  for (var cy = 0; cy < height; cy++) {
+    for (var cx = 0; cx < width; cx++) {
+      const index = 4 * (width * cy + cx);
       data[index + 0] = config.background.r;
       data[index + 1] = config.background.g;
       data[index + 2] = config.background.b;
@@ -152,15 +191,23 @@ function init(event) {
     }
   }
   canvas_context.putImageData(image_data, 0, 0);
+}
 
-  field = new Array(width * height).fill(0);
-
+function start() {
   running = true;
 
   request_id = window.requestAnimationFrame(update);
 }
 
-function config_change() {
+function init() {
+  reset();
+  load_config();
+  setup_ui();
+  setup_canvas();
+  start();
+}
+
+/*function config_change() {
   hex = config.background = document
     .getElementById("background")
     .value.substring(1);
@@ -169,7 +216,7 @@ function config_change() {
   b = parseInt(hex.substring(4, 6), 16);
   config.background = { r: r, g: g, b: b };
   init();
-}
+}*/
 
 function move_forward(ant) {
   switch (ant.orientation) {
@@ -201,9 +248,9 @@ function move_forward(ant) {
 }
 
 function update_ant(ant) {
-  state = field[width * ant.y + ant.x];
+  var state = field[width * ant.y + ant.x];
 
-  rule = ant.rules[state % ant.rules.length];
+  const rule = ant.rules[state % ant.rules.length];
 
   ant.orientation += rule.direction;
   ant.orientation %= Object.keys(orientations).length;
@@ -214,8 +261,8 @@ function update_ant(ant) {
 
   move_forward(ant);
 
-  index = 4 * (width * ant.y + ant.x);
-  blend_ratio = rule.color.a / 255;
+  const index = 4 * (width * ant.y + ant.x);
+  const blend_ratio = rule.color.a / 255;
   data[index + 0] =
     (1 - blend_ratio) * data[index + 0] + blend_ratio * rule.color.r;
   data[index + 1] =
@@ -226,27 +273,24 @@ function update_ant(ant) {
 
 function update(timestamp) {
   if (timestamp - previous_timestamp > 1000) {
-    fps = Math.round((1000 * frames) / (timestamp - previous_timestamp));
+    const fps = Math.round(
+      (1000 * frames_count) / (timestamp - previous_timestamp)
+    );
     document.getElementById("fps").textContent = `${fps} FPS`;
     previous_timestamp = timestamp;
-    frames = 0;
+    frames_count = 0;
   }
-
-  canvas = document.getElementById("canvas");
-
-  width = canvas.width;
-  height = canvas.height;
 
   data = image_data.data;
 
-  steps = parseInt(document.getElementById("speed").value);
-  for (step = 0; step < steps; step++) {
+  const steps = parseInt(document.getElementById("speed").value);
+  for (var step = 0; step < steps; step++) {
     ants.forEach(update_ant);
   }
 
   canvas_context.putImageData(image_data, 0, 0);
 
-  frames++;
+  frames_count++;
 
   if (running) {
     request_id = window.requestAnimationFrame(update);
