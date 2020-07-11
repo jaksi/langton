@@ -103,6 +103,7 @@ function init(event) {
     config.ants = [];
   }
   document.getElementById("share").href = `#${btoa(JSON.stringify(config))}`;
+
   document.getElementById(
     "background"
   ).value = `#${config.background.r
@@ -110,6 +111,16 @@ function init(event) {
     .padStart(2, "0")}${config.background.g
     .toString(16)
     .padStart(2, "0")}${config.background.b.toString(16).padStart(2, "0")}`;
+  ants_div = document.getElementById("ants");
+  ants_div.innerHTML = "";
+  config.ants.forEach((ant) => {
+    ant_div = document.createElement("div");
+    ant_div.className = "ant";
+    ant_div.innerHTML = JSON.stringify(ant, null, 1);
+    ants_div.appendChild(ant_div);
+  });
+  ants_div.appendChild();
+  ants_div.innerHTML = JSON.stringify(config.ants, null, 1);
 
   ants = config.ants.map(function (ant) {
     return {
