@@ -23,6 +23,7 @@ p {
   flex-direction: column;
   width: 16em;
   margin: 0.5em;
+  overflow-y: scroll;
 }
 
 #sidebar > div {
@@ -32,6 +33,16 @@ p {
 .grid {
   display: grid;
   grid-template-columns: auto auto;
+}
+
+.box {
+  border: 1px solid black;
+  margin: 0.25em;
+  padding: 0.25em;
+}
+
+.box > div {
+  margin-top: 0.25em;
 }
 
 #canvas_div {

@@ -38,28 +38,28 @@
             max="256"
             step="1"
             id="scale"
-            onchange="init();"
           />
         </div>
 
         <div>
-          <input type="button" value="Reset" onclick="init();" />
-          <input
-            type="button"
-            value="Randomize"
-            onclick="config = null; window.location.hash = ''; init();"
-          />
+          <input type="button" value="Reset" id="reset" />
+          <input type="button" value="Randomize" id="randomize" />
         </div>
 
         <div class="grid">
           Background
-          <input type="color" id="background" onchange="config_change();" />
+          <input type="color" id="background" />
         </div>
+
         <div>
           Ants
-          <div id="ants"></div>
+          <div>
+            <div id="ants"></div>
+            <input type="button" value="Add ant" id="add_ant" />
+          </div>
         </div>
       </div>
+
       <div id="canvas_div">
         <canvas id="canvas"></canvas>
       </div>
