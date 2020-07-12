@@ -12,15 +12,9 @@ const directions = {
   L: 3,
 };
 
-function generate_color(alpha = true) {
-  const color = {
-    r: Math.floor(Math.random() * 256),
-    g: Math.floor(Math.random() * 256),
-    b: Math.floor(Math.random() * 256),
-  };
-  if (alpha) {
-    color.a = Math.floor(Math.random() * 256);
-  }
+function generate_color() {
+  const color = color_scheme[Math.floor(Math.random() * color_scheme.length)];
+  color.a = Math.floor(Math.random() * 256);
   return color;
 }
 
@@ -48,8 +42,8 @@ function generate_ant() {
 
 function generate_config() {
   return {
-    background: generate_color(false),
-    ants: [...Array(1 + Math.floor(Math.random() * 4))].map(() =>
+    background: color_scheme[0],
+    ants: [...Array(1 + Math.floor(Math.random() * 16))].map(() =>
       generate_ant()
     ),
   };
@@ -66,6 +60,8 @@ var previous_timestamp = 0;
 var frames_count = 0;
 var ants;
 var width, height;
+const colors = [];
+var color_scheme;
 
 window.onload = init;
 window.onresize = init;
@@ -79,6 +75,7 @@ document.getElementById("add_ant").onclick = function () {
 document.getElementById("background").onchange = config_change;
 
 document.getElementById("randomize").onclick = function () {
+  color_scheme = colors[Math.floor(Math.random() * colors.length)];
   config = generate_config();
   init();
 };
